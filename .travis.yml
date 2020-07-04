@@ -1,0 +1,30 @@
+language: node_js
+node_js:
+  - lts/*
+
+cache:
+  directories:
+    - node_modules
+
+before_install:
+  - export TZ='Asia/Shanghai'
+
+install:
+  - npm install hexo-cli -g
+  - npm install
+
+script:
+  - hexo g
+
+after_script:
+  - cd ./public
+  - git init
+  - git config user.name "$GIT_NAME"
+  - git config user.email "$GIT_EMAIL"
+  - git add .
+  - git commit -m "Update at $(date +'%Y-%m-%d %H:%M:%S')"
+  - git push --force --quiet "https://${REPO_TOKEN}@${REPO_ADDR}" master:master
+
+branches:
+  only:
+    - master
