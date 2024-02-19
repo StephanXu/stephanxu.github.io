@@ -1,0 +1,117 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Stephan Xu</title><link>http://www.fenzhengrou.wang/</link><description>Stephan Xu</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Mon, 19 Feb 2024 20:00:00 +0800</lastBuildDate><atom:link href="http://www.fenzhengrou.wang/index.xml" rel="self" type="application/rss+xml"/><item><title>VSCode升级18.6后提示“你已连接到不受Visual Studio Code支持的OS版本</title><link>http://www.fenzhengrou.wang/posts/vscode%E5%8D%87%E7%BA%A71.86%E5%90%8E%E6%8F%90%E7%A4%BA%E4%BD%A0%E5%B7%B2%E8%BF%9E%E6%8E%A5%E5%88%B0%E4%B8%8D%E5%8F%97visual-studio-code%E6%94%AF%E6%8C%81%E7%9A%84os%E7%89%88%E6%9C%AC/</link><pubDate>Mon, 19 Feb 2024 20:00:00 +0800</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/vscode%E5%8D%87%E7%BA%A71.86%E5%90%8E%E6%8F%90%E7%A4%BA%E4%BD%A0%E5%B7%B2%E8%BF%9E%E6%8E%A5%E5%88%B0%E4%B8%8D%E5%8F%97visual-studio-code%E6%94%AF%E6%8C%81%E7%9A%84os%E7%89%88%E6%9C%AC/</guid><description><![CDATA[发生了什么？ 在VSCode最近的一次更新中，提升远程开发使用的node版本，更新后的node依赖glibc&gt;=2.28。
+在升级1.86版本后，如果尝试连接glibc 2.28以下版本的开发机，会提示连接到不受支持的OS版本。
+按照官方的要求。最好的解决方案自然是升级到更新的glibc版本，这也意味着需要使用更新的系统版本。在社区的热烈讨论下，VSCode项目组最终对于旧glibc延长额外支持12个月。但新版本连接到旧glibc服务器后，仍然会有一行醒目的提示：
+本文提供一种极端手动的方法（本来是给开发环境的dockerfile使用），即手动编译一份glibc和node，以专供VSCode的远端服务器使用。
+开搞 1. 从编译器说起 (可选) 从文档来看，node现在已经要求到了GCC 10，我们的环境很有可能没准备。（如果你的环境已经有一份比较高版本的编译器，可以跳过这里啦）
+这里准备了一份贴贴心的安装脚本，以防你真的没有更新的GCC。为了避免搞坏你的环境，它只会在/usr/local/bin下建立gcc-12和g++-12，而不会覆盖掉默认的gcc，g++命令。
+# 编译一份GCC, 参考时间半个钟, 配置好的机器请自行按照CPU核心数酌情修改make -jN curl -OL &#34;https://ftp.gnu.org/gnu/gcc/gcc-12.2.0/gcc-12.2.0.tar.gz&#34; \ &amp;&amp; tar -zxvf gcc-12.2.0.tar.gz \ &amp;&amp; pushd gcc-12.2.0 \ &amp;&amp; ./configure --prefix=/usr/local/gcc-12.2.0 \ &amp;&amp; make -j8 \ &amp;&amp; make install \ &amp;&amp; ln -s /usr/local/gcc-12.2.0/bin/gcc /usr/bin/gcc-12 \ &amp;&amp; ln -s /usr/local/gcc-12.2.0/bin/g++ /usr/bin/g++-12 \ &amp;&amp; popd \ &amp;&amp; rm -r gcc-12.2.0.tar.gz gcc-12.2.0 编译了以后记得把LD_LIBRARY_PATH加上:
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/gcc-12.2.0/lib64 2. 来一份Glibc 这里我选择编译glibc 2.30，glibc需要更新一些的binutils和make，遂编译之。]]></description></item><item><title>红黑树基础操作</title><link>http://www.fenzhengrou.wang/posts/%E7%BA%A2%E9%BB%91%E6%A0%91%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/</link><pubDate>Mon, 06 Dec 2021 00:00:00 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/%E7%BA%A2%E9%BB%91%E6%A0%91%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/</guid><description>性质 每个节点要么是黑色，要么是红色 根节点是黑色 每个叶子结点（NIL）是黑色 每个红色节点的两个子节点一定都是黑色，即不能有两个红色节点相连 任意一节点到每个叶子结点的路径都包含数量相同的黑节点（俗称“黑高”） 推论：如果一个节点存在黑子节点，那么该节点肯定有两个子节点。 自平衡操作 变色：结点的颜色由红变黑或由黑变红。
+左旋：以某个节点作为支点（旋转节点），其右子节点变为旋转节点的父节点，右子节点的左子节点变为旋转节点的右子节点，左子节点保持不变。
+右旋：以某个节点作为支点（旋转节点），其左子节点变为旋转节点的父节点，左子节点的右子节点变为旋转节点的左子节点，右节点保持不变。 插入操作 插入节点时，节点必须为红色。
+原因：红色在父节点为黑色节点时，红黑树的黑色平衡没有被破坏，不需要做自平衡操作。但如果插入节点为黑色，那么插入位置所在的子树黑色节点总是多1，必须做自平衡。
+术语 插入情景 红黑树为空树：直接把插入节点作为根节点，并把插入节点设置为黑色。 插入节点的Key已经存在：更新当前节点的值为插入节点的值。 插入节点的父节点为黑色：由于插入的节点是红色的，当父节点是黑色时，并不会影响红黑树的平衡，直接插入即可，无需做自平衡。 插入节点的父节点为红色：如果插入节点的父节点为红节点，那么该父节点不可能为根节点，所以插入节点总是存在祖父节点。
+叔叔节点存在并且为红节点 将P和U节点改为黑色 将PP改为红色 将PP设置为当前节点，进行后续处理（即如果PP的父节点也是红色，则继续以PP为当前节点进行插入操作自平衡处理，直到平衡为止） 叔叔节点不存在或为黑节点，并且插入节点的父亲节点是祖父节点的左子节点
+新插入的节点是其父节点的左子节点（LL双红）
+变色：将P设置为黑色，将PP设置为红色 对PP节点进行右旋 新插入的节点是其父节点的右子节点（LR双红）
+对P进行左旋 将P设置为当前节点，得到“LL双红”的情况 按照“LL双红”的情况处理（变颜色、右旋PP） 叔叔节点不存在或为黑节点，并且插入节点的父亲节点是祖父节点的右子节点
+新插入的节点是其父节点的右子节点（RR双红）
+变色：将P设置为黑色，将PP设置为红色 对PP节点进行左旋 新插入的节点是其父节点的左子节点（RL双红）
+对P进行右旋 将P设置为当前节点，得到“RR红色”的情况 按照“RR红色”情况处理（变颜色、左旋PP）</description></item><item><title>Github代理设置</title><link>http://www.fenzhengrou.wang/posts/github%E4%BB%A3%E7%90%86%E8%AE%BE%E7%BD%AE/</link><pubDate>Sat, 21 Nov 2020 18:24:24 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/github%E4%BB%A3%E7%90%86%E8%AE%BE%E7%BD%AE/</guid><description>本文记录了在Linux（含MacOS）、Windows下配置SSH、HTTP代理以加速Github的使用。
+HTTP连接 HTTP可以使用HTTP代理服务器进行加速，在Github中配置：
+git config --global https.proxy http://127.0.0.1:1080 git config --global https.proxy https://127.0.0.1:1080 git config --global --unset http.proxy git config --global --unset https.proxy SSH连接 针对SSH方式操作的仓库，需要配置Socks5代理，在~/.ssh/config文件中加入ProxyCommand配置即可，Linux下可用：
+Host github.com User git ProxyCommand nc -X 5 -x 127.0.0.1:1086 %h %p Windows下可使用
+Host github.com User git ProxyCommand connect -S 127.0.0.1:2801 %h %p</description></item><item><title>MongoDB基础配置手册</title><link>http://www.fenzhengrou.wang/posts/mongodb%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%E6%89%8B%E5%86%8C/</link><pubDate>Wed, 18 Nov 2020 20:22:24 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/mongodb%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%E6%89%8B%E5%86%8C/</guid><description><![CDATA[基于Docker的建立 创建数据库 docker run -d -p 27017:27017 —name mongo \ -e MONGO_INITDB_ROOT_USERNAME=root \ -e MONGO_INITDB_ROOT_PASSWORD=mypassword \ -e MONGO_INITDB_DATABASE=myfirstdb \ -v /my/own/datadir:/data/db \ mongo:4 在使用了MONGO_INITDB_ROOT_USERNAME与MONGO_INITDB_ROOT_PASSWORD后，容器脚本将自动创建一个具有完全权限的账号，并在启动mongod时指定—-auth开启身份验证。
+创建备份 建立在Docker中的MongoDB可以使用下面的语句来建立备份：
+docker exec some-mongo sh -c &#39;exec mongodump -d &lt;database_name&gt; --archive&#39; &gt; /some/path/on/your/host/all-collections.archive 访问控制 注意：启动mongod时应使用—auth才会开启访问控制。 如果admin库中没有任何用户的话，即使在其他数据库创建用户，无论是否启用访问控制，默认的连接方式依然会具有超级权限。
+客户端可以在连接时进行身份验证：
+mongo --port 27017 -u &#34;username&#34; -p &#34;password&#34; --authenticationDatabase &#34;admin&#34; 亦可在连接客户端后进行验证：
+mongo --port 27017 use admin db.auth(&#34;username&#34;, &#34;password&#34;) // 输出1即认证成功 创建用户 use foo db.createUser( { user: &#34;username&#34;, pwd: &#34;password&#34;, roles: [{role: &#34;readWrite&#34;, db: &#34;foo&#34;}, {role: &#34;read&#34;, db: &#34;bar&#34;}] } ) 注意：use foo表明用户在foo库中创建，就一定要由foo库验证身份，即用户的信息跟随随数据库。如上述username虽然有bar库的读取权限，但是一定要先在foo库进行身份验证，直接访问会提示验证失败。]]></description></item><item><title>LXD虚拟化服务器</title><link>http://www.fenzhengrou.wang/posts/lxd%E8%99%9A%E6%8B%9F%E5%8C%96%E9%85%8D%E7%BD%AE/</link><pubDate>Sun, 05 Jul 2020 02:37:24 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/lxd%E8%99%9A%E6%8B%9F%E5%8C%96%E9%85%8D%E7%BD%AE/</guid><description><![CDATA[本文档记录了简单的LXD虚拟化方案，能够实现
+在物理机上创建多个隔离的容器环境 在容器环境中运行桌面 将GPU接入容器环境中，并在多个容器间共享 快速配置 宿主机 快速初始化宿主机
+# 安装对应依赖 sudo apt install lxd zfsutils-linux bridge-utils # 创建存储池 lxc storage create &lt;storage-poll-name&gt; zfs size=256GB # 初始化lxd lxd init # 添加存储池 lxc profile device add default root disk path=/ pool=&lt;storage-poll-name&gt; # 添加清华镜像 lxc remote add tuna-images https://mirrors.tuna.tsinghua.edu.cn/lxc-images/ --protocol=simplestreams --public 快速创建新容器
+# 创建容器（此处对应ubuntu/18.04镜像） lxc launch tuna-images:ubuntu/18.04 &lt;container-name&gt; # 添加GPU（此处添加第一个GPU） lxc config device add &lt;container-name&gt; gpu0 gpu id=0 如果需要在容器内运行docker，需要权限
+lxc config edit &lt;container-name&gt; 在config段中添加设置]]></description></item><item><title>利用vcpkg轻松安装C++库</title><link>http://www.fenzhengrou.wang/posts/%E5%88%A9%E7%94%A8vcpkg%E8%BD%BB%E6%9D%BE%E5%AE%89%E8%A3%85c++%E5%BA%93/</link><pubDate>Tue, 10 Dec 2019 14:18:47 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/%E5%88%A9%E7%94%A8vcpkg%E8%BD%BB%E6%9D%BE%E5%AE%89%E8%A3%85c++%E5%BA%93/</guid><description><![CDATA[在C++上配置各种库这件事情是不太容易的。并且在各种平台上可以有各种不同的配置方法。通常我们在使用一个C++库时都具有下面的几个步骤：
+下载库源代码 编译库 将库引入到项目中 虽然只有区区几步，但是在实现这些步骤时却需要做很多事情，并且稍有不慎可能就会导致最终的结果完全错误。
+基于这个问题，微软开源了跨平台的包管理工具vcpkg，它可以在Windows、Linux和MacOS上运行，只需要用一行命令就可以安装C++库并自动地引入到项目中。
+在下面的例子当中我们将尝试自己动手安装一个带有各种支持的OpenCV库。
+这篇文章主要针对于Windows系统，如果你需要在Linux、MacOS上配置Vcpkg，请参考这篇微软的文档：
+配置Vcpkg 下载并初始化vcpkg vcpkg的整个程序托管在GitHub上，你可以在下面的链接当中把vcpkg克隆到本地或者直接下载它的压缩包解压到某个你认为正确的地方。之后vcpkg安装的各类库都会放在这个目录下。
+https://github.com/Microsoft/vcpkg 我们在vcpkg的根目录（即可以看到bootstrap-vcpkg.bat文件的目录）的地址栏中直接输入powershell并按下回车，这将打开PowerShell窗口，在其中请输入下面的命令并回车初始化vcpkg：
+./bootstrap-vcpkg.bat 在执行完毕后，你可以尝试键入下面的命令并回车来验证你的vcpkg已经初始化完成：
+./vcpkg version 不出意外你应该可以看到一些版本信息的输出。这可以验证你的vcpkg根目录下已经生成了vcpkg.exe这一文件。请你右击这个文件查看属性，并在常规-&gt;位置这一项上复制其后的地址，在之后，我会将这个路径称为vcpkg的根目录路径。
+安装集成 集成是为了让Visual Studio能够直接访问我们安装的库而不需要其他配置，请按下win+x键，然后在弹出的菜单中选择Windows PowerShell (管理员)，并输入命令（请将命令中文字“根目录路径”替换为刚刚复制的vcpkg的根目录路径，注意请保留两侧的引号）：
+cd &#34;根目录路径&#34; 例如我的命令看起来像这样：
+cd &#34;C:\libs\vcpkg&#34; 按下回车后，你应该可以看到命令行光标前的目录已经改变。此时，你应该关闭Visual Studio后输入下面的命令并回车：
+./vcpkg integrate install 此时你已经安装好了Visual Studio的集成，在Visual Studio创建的项目VC++项目当中你可以直接引入头文件调用该库。如果你的项目是CMake项目，你可能需要将CMAKE_TOOLCHAIN_FILE设置为vcpkg根目录路径/scripts/buildsystems/vcpkg.cmake。这个提示通常在你执行上面的命令后获得的输出的最后一行出现。
+安装库 此时vcpkg已经在计算机中被安装好了，请在vcpkg的根目录的地址栏中直接输入powershell并按下回车，这将再次打开PowerShell窗口（你可以注意到PowerShell窗口的标题栏上没有“管理员”字样），在其中请输入下面的命令搜索OpenCV库：
+./vcpkg search opencv 可以看到得到的结果中OpenCV后有中括号，其中带有各类支持选项，例如可以选择安装contrib或cuda支持。此处我们可以按照下面的选项在vcpkg中下安装OpenCV（这不是唯一的方法）：
+./vcpkg install opencv[nonfree,contrib,ffmpeg]:x64-windows 注意，上面的命令中开启了三个支持开关，你可以自由地删去或增加一些。另外，我们利用冒号:描述了这个库的安装选项，即在Windows平台下使用x64进行编译，如果不特别描述，vcpkg会使用默认的x86-windows设置。在其他系统（例如Linux、MacOS）下也可以设置到对应的操作系统。这一项设置对下面在项目中使用非常重要，如果项目设置为x64平台而库的安装使用了x86平台，由于项目与库的平台不兼容，之后当项目尝试使用库时IntelliSense将不会列出这个库的头文件。
+此时按下回车，vcpkg将按照OpenCV的依赖依次安装需要的库，所以不需要担心可能有任何路径上或者依赖上的问题。vcpkg会自动从待安装库的源代码仓库拉去源代码，而通常库的源代码会被托管在GitHub上，由于大陆的网络环境比较特殊，这可能带来几次在下载途中的失败，你可以尝试重新运行上面的命令，也可以为计算机配置代理。安装的过程通常需要持续数分钟到数十分钟。
+在项目中引用 在OpenCV安装完成后，你可以打开某个项目或创建某个新项目，并在项目中直接使用安装好的OpenCV库，值得注意的是，如果此前安装的是x64编译选项的库，那么它仅在平台设置为x64的项目中有效，同理，如果安装的是x86选项的库则对应平台设置为x86的项目：
+在编译完成后，vcpkg与Visual Studio的集成将能够把所有依赖的动态链接库文件（Dll文件）拷贝到输出的可执行文件（Exe文件）的目录下。所以你的输出目录可能如下图：
+如果你只是像上面的动图一样只引用了头文件而没有写任何使用到OpenCV的代码，你的输出目录仍然可能不包括上面的这些动态链接库文件（Dll文件）。这时你可以利用下面的示例代码来输出OpenCV的版本号。
+#include &lt;iostream&gt; #include &lt;opencv2/opencv.hpp&gt; int main() { std::cout &lt;&lt; CV_VERSION &lt;&lt; std::endl; } 此时，你已经利用vcpkg完成了对OpenCV库的安装。你可以继续尝试安装或使用其他的库。]]></description></item><item><title>2018，这一年，我的备忘录</title><link>http://www.fenzhengrou.wang/posts/2018%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</link><pubDate>Tue, 01 Jan 2019 00:25:24 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/2018%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</guid><description>有的时候我会写备忘录。
+第一次在外省过元旦，恰好缝上南方少见的寒冷天气，可能是南方人对成天的大雪少有体会，以至于这些日子哆哆嗦嗦都不情愿在室外多待一秒钟。对着电脑，实在是不知道要对这一年说些什么，像是旅人与一个当地人的道别，每年如此，遇见再告别，再遇见，再告别，离别都不是那么要紧。而这备忘录，我是当作游记一般，不论因果，不讲得失。如果要看这一年，便就是要读读看自己的“游记”。
+我想我早就对跌宕起伏的这一年充满期待。
+六月，我参加了高考。自然是令人难忘的备考经历，也是同很多青春电影一样：齐肩高的书，同臂长的考卷，满处的横幅，焦虑的学生以及忧心忡忡地徘徊在走廊的老师们。那段日子固然是辛苦，早早起床，十四个、十五个小时地待在学校，我常告诉别人，这叫“披星戴月”。焦躁地听老师的课，匆忙地收拾东西下课，再不安地接过爸妈送的饭盒。时常，也会为自己的着急，也会在深夜问自己要不要接着坚持下去：
+风起于清蘋之上，浪成于微澜之间。 明天会更好。
+也是在那段日子，我习惯了每天戴着耳机，在自己的世界里徘徊。彼时也是从冬天一晃就到了烈日当头的日子，完全不似我以前猜测的那般焦灼和煎熬。我想我应当是准备好了的，我想，我是可以没有遗憾地面对结果的。
+高考前一天，我写了备忘录：
+下午就要开始试坐： 曾经感觉离我甚远的高考，如今也将是站在我跟前了。 曾经一大片的日子，总是期待着长大。而站在岔口，回看来路，才算是体会到——这生命的路看起来很长，长得好像没有尽头，可我们的成长却只是在那几个瞬间，快得好像根本来不及让人准备。 盼着盼着，这一天就这么来了。
+可结果并不总是如我所愿，特别的考情依旧还是让我在还算体面的分数上落马。成绩很是平凡，甚至说也是有一些小小地令人失望。我最终被一所普通的一本学校录取，而且也没能报上自己想要的专业。报到那天，妈说：“你也算是了了我一桩心事，妈就是想让你能上到一本。”我没说话，只看着窗外，看着这个陌生又熟悉的城市。后来我站在这所学校门口看着人群往溯，心中想着未来的四年我就将会在这里度过：
+是我选择了高考，现在我需要让它变成一个好的决定。
+也许是老天的眷顾，它仍想让我尝快一点接受更真实一点的生活，很幸运地我没有忽略掉我要专注的事情。也不知道是经过了怎样的一番际遇我加入了一群研究生的队伍。我得以在我喜欢的方向，也在我喜欢的环境里做研究。我知道，可能接下来的日子我就要做出一点点小改变了。我和懒觉说再见，早上七点手机把我叫醒，然后悄悄地收拾和出门，混入上早课的队伍。早上做一小杯咖啡，再一边确认我的待办列表，就算得上是提醒我这一天开始了。
+我会告诉自己想要做的事情：
+要学会做一些小前端 想要开始做深度学习 年初那时候，正是享受闲暇的好时机，我心血来潮想要给朋友们做一些电子贺卡。于是找来一台小小的服务器，给之前做的一个发送消息的小应用加上了发送图片的功能。在年三十的晚上，用一个二维码把我的贺卡发给了朋友们。所以从这里开始，我就记下了做前端这件事情。今年大大小小的事情，我一直都在刻意地去多做一些前端，虽然到现在我的前端依旧做得还是不像样子，但终归还是有一点点小小进步。还给自己实现了一个视差滚动的小封装。
+十一月份我参加了一个深度学习的小比赛，可能是无知者无畏，和一位学长一起训练出了一个还算不错的模型。到现在，我还没有忘记刚刚开始用Linux配置环境的时候令我抓狂的问题，编译，测试，删除，再编译，再测试，再删除。如此这般，使劲地折腾了一个月才算是勉强能够自己开始配置和编译库。这是我第一次真正跨平台地写代码，好几天，好几周，一块小蛋糕，一杯拿铁，就当是给自己好好努力的奖赏，低头揉揉眼睛，再望望天花板后，虽然发现自己和其他人的距离仍然没有缩短多少，许多工作仍没有完成。喝口咖啡，看看窗外，然后发几分钟呆，想想风从哪吹过，想想风吹过的远方的人。
+现在，在与这个温柔而重要的一年说再见的这一刻，我想用轻快，不留一丝遗憾的脚步声，与2018年道别。
+回宿舍的路上，呆望着地板，像是走在回到我半年前要回到的住所的路上一般。暗黄的灯光勉强够到我的路，从一辆辆停着的车的空隙间慢慢走过。
+相遇是隆重的，而离别是毫无准备的。2018年，就此别过。
+2018/12/31</description></item><item><title>Caffe 以及 Caffe-SSD 的配置</title><link>http://www.fenzhengrou.wang/posts/caffe-%E4%BB%A5%E5%8F%8A-caffe-ssd-%E5%9C%A8ubuntu16.04%E4%B8%8A%E7%9A%84%E9%85%8D%E7%BD%AE/</link><pubDate>Thu, 15 Nov 2018 00:46:49 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/caffe-%E4%BB%A5%E5%8F%8A-caffe-ssd-%E5%9C%A8ubuntu16.04%E4%B8%8A%E7%9A%84%E9%85%8D%E7%BD%AE/</guid><description>这段时间装了很多次Caffe，总结了一些方法和经验。此处笔者安装的是带GPU支持的Caffe。但是CPU ONLY的方法与GPU安装差异不大。笔者会在其中说明。
+第一部分 Nvidia 环境安装 这一部分我们需要安装NVIDIA的基本环境，所以，并非使用 Nvidia GPU 的读者以及使用CPU的读者可以跳过这一部分。这一部分主要包括：
+Nvidia 驱动程序 CUDA（此处我们安装8.0版本） cudnn（此处我们安装6.1版本） Nvidia 驱动程序 在Ubuntu中，你可以在你的 设置-&amp;gt;软件和更新-&amp;gt;附加驱动 中看到Nvidia的驱动，你可以尝试安装此驱动。当然，如果你希望手动安装，可以到Nvidia的网站选择你的型号来下载驱动程序。
+在Ubuntu 16.04中由于系统已经提供了较好的驱动可以直接使用，所以此处推荐直接使用该驱动。驱动安装完成以后可以在终端运行命令nvidia-smi查看GPU信息。
+CUDA 首先你需要到 Nvidia的网站下载CUDA。截至本文撰写前，CUDA Toolkit的最新版本是10.0。此处笔者点击Legacy Releases找到了8.0的版本下载。为了安装方便，笔者选择下载run文件。
+下载完成以后，按Ctrl+Alt+F1进入字符终端界面，按照正常方式登陆之后，运行下面的命令：
+$ sudo service lightdm stop #关闭图形界面 $ sudo bash cuda_8.0.61_375.26_linux.run 此时会出现安装协议，只需要按空格键即可快速跳过，接受协议。之后会询问是否安装驱动。由于我们现在已经安装了 Nvidia驱动，所以已经不需要再安装驱动（注：笔者在不安装Nvidia驱动的情况下直接采用此驱动也会安装失败）。安装完成后，就可以启动图形界面了。
+$ sudo service lightdm start 要检查CUDA是否安装完成，可以直接在终端运行nvcc -V即可输出CUDA版本信息。现在我们开始安装cudnn，首先解压cudnn的压缩包到当前文件夹（即一个名为cuda文件夹）
+$ cd cuda $ cd include $ sudo cp cudnn.h /usr/local/cuda/include/ #复制头文件 $ cd .. $ cd lib64 $ sudo cp lib* /usr/local/cuda/lib64/ #复制动态链接库 $ cd /usr/local/cuda/lib64/ $ sudo chmod +r libcudnn.</description></item><item><title>Calenass 轻松管理课程日程</title><link>http://www.fenzhengrou.wang/posts/calenass-%E8%BD%BB%E6%9D%BE%E7%AE%A1%E7%90%86%E8%AF%BE%E7%A8%8B%E6%97%A5%E7%A8%8B/</link><pubDate>Wed, 03 Oct 2018 22:38:10 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/calenass-%E8%BD%BB%E6%9D%BE%E7%AE%A1%E7%90%86%E8%AF%BE%E7%A8%8B%E6%97%A5%E7%A8%8B/</guid><description>介绍 Calenass能够很方便地为你管理你的课程表。它能够创建ics文件，从而将课程安排导入到你的日历当中。方便你进行其他的管理。同时，它还支持导出/导入设置，从而让你更方便地共享你的课程安排。并且，我们同时提供了Windows，MacOS，Linux和Darwin的适用版本。满足不同设备的需求。
+基本设置 在设置面板中，你可以设置好你的课表的显示名称，你最后创建的日历将标识为此名称。
+我们了解你课程安排的第一步，就是知道你的上课时间。首先你需要设置第一工作周的开始日期（周一），例如下图中设置的2018-09-03。然后，你需要告诉我们你的一天被划为几个部分（课程时间），例如下图中分别为“第一二节”，“第三四节”，“第五六节”，“第七八节”，“第九十11节”。
+点击“添加”按钮，就可以往列表中添加一个课程时间。可以通过点击课程时间的名称来展开它的设置，例如下图中，课程时间的开始时间是16:00，结束时间是17:50。
+如此，添加你自己的课程时间后，就可以开始设置课程了。
+添加课程 切换到课程面板。点击末尾的“＋”按钮，即可开始添加课程，值得注意的是，此处的周设置，多个周之间用逗号分隔，并且连续的周可以用短横线（即-）连接。例如下图。单击添加按钮后，即可将课程添加到列表中。
+不仅可以如此添加课程，如果一门课有多个上课时间，可以展开对应课程的面板，点击面板中的“＋”按钮进行添加。如下图：
+点击课程本身，就可以尝试移除它。需要注意的是，移除后有可能会使课程面板的排列发生变化。
+生成日历文件 在首页面板中，点击“生成日历”按钮，选择保存位置后，即可保存日历文件，值得注意的是，这项功能需要你有网络连接。所以请确保生成时电脑能够连接到网络。
+日历文件的使用方法如下：
+Android设备：部分Android设备可以直接打开日历文件，你可以尝试将日历文件发送到你的Android设备并打开导入日程。 iOS设备：如果你有iOS设备，并且“邮件”应用已经配置好的话。可以直接将日历文件作为邮件附件发送到你的邮箱中并用你的iOS设备查看。点击收到的日历文件即可自动完成配置导入日程。 电脑：在安装有Office Outlook的电脑上，可以直接双击生成的日历文件从而导入。如果你登陆了微软账号，则可以同步到你的微软账号当中。 订阅方式（正在开发）：你可以将日历文件上传到云，获得日历链接，并在对应设备上订阅该日历，即可同步日历到你的设备中。 为什么要捐赠 开发Calenass纯粹是出于个人的爱好，开发、维护、更新需要付出很多的时间和精力，对于某些功能还需要购买服务器进行支持。这些目前都是由开发者自己承担的。
+但是这并不意味着你一定需要为使用这款软件付费，它仍是免费使用的，但是如果你非常喜欢，你可以为之付出任意多的一笔费用来支持它继续更新和运行下去。
+非常感谢在我之前的项目中捐赠的朋友们，虽然没能把你们一一列出来，但是你们的帮助仍然给了我很多动力去完善和更新这些项目。
+如果你愿意支持这项项目，你可以在“首页”版面下找到“捐赠”按钮，并完成捐赠。
+常见问题 Q：如何拖动Calendar的窗口？ A：我们将窗口的拖动范围缩小了，按住左上角的小logo即可拖动窗口。
+Bug反馈 Calenass仍非常年轻，在运行过程中，它可能会出现一些问题。如果你遇到了任何问题，你都可以尝试联系我来解决。非常期待你的反馈：
+邮箱地址：xuzihanapple@live.com 博客地址：www.mrxzh.com</description></item><item><title>给每个人的微信取证指南，这件事不是截个图那么简单</title><link>http://www.fenzhengrou.wang/posts/%E7%BB%99%E6%AF%8F%E4%B8%AA%E4%BA%BA%E7%9A%84%E5%BE%AE%E4%BF%A1%E5%8F%96%E8%AF%81%E6%8C%87%E5%8D%97%E8%BF%99%E4%BB%B6%E4%BA%8B%E4%B8%8D%E6%98%AF%E6%88%AA%E4%B8%AA%E5%9B%BE%E9%82%A3%E4%B9%88%E7%AE%80%E5%8D%95/</link><pubDate>Mon, 03 Sep 2018 18:24:55 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/%E7%BB%99%E6%AF%8F%E4%B8%AA%E4%BA%BA%E7%9A%84%E5%BE%AE%E4%BF%A1%E5%8F%96%E8%AF%81%E6%8C%87%E5%8D%97%E8%BF%99%E4%BB%B6%E4%BA%8B%E4%B8%8D%E6%98%AF%E6%88%AA%E4%B8%AA%E5%9B%BE%E9%82%A3%E4%B9%88%E7%AE%80%E5%8D%95/</guid><description> 转自少数派，原文链接 作者：張奕源 Nick
+2018 年 7 月 18 日，广东省广州市南沙区人民法院（广东自由贸易区南沙片区人民法院）出台《互联网电子数据证据举证、认证规程》，使「微信取证」再次成为公众关注焦点。因此本文将从法律从业人员的角度，聊一聊微信取证（及其它互联网社交软件取证）的相关问题。
+（Nick 按：这篇文章由做律师的黛西老师原创，由于她没有 Matrix 帐号，于是假我手发出，希望能对你有所帮助。）
+微信取证的基本原则 此前，微信、QQ 等互联网社交软件的取证就已经被纳入有效证据的范畴，此次举证规程的出台再度明确了软件取证的各项细节。整个过程并非部分网友想象的「只是截截聊天记录」那么简单，它需要形成一套完整的证据链条。
+在开始取证前，建议你先了解微信取证的一些基本原则，便于你举一反三：
+**微信聊天记录作为证据要符合「合法性、真实性、关联性」的「三性」特征。**即微信聊天记录要依法取得、来源合法；所表达的事实或内容真实；与待证事实密切相关。 与案件事实有关的内容不得选择性提供：微信聊天记录应当完整地反映对话过程，与案件事实有关的内容不得选择性提供，法庭可以要求补充提供指定期间内的完整对话记录。需要注意的是：如果故意选择性提供对话记录内容，将承担相应的法律后果。 注意保留微信聊天记录中对方身份的证据：可以采取对方的自认、手机号码锁定、通过聊天细节、微信头像、微信相册、朋友圈等方式确认，必要时也可以请求腾讯公司协助调查。 所有证据及时固定，善于利用微信收藏：所有证据都尽可能在第一时间固定保存，避免对方撤回、删改等。对于图片、视频等有保存期限的格式，应注意及时下载或收藏，避免证据灭失而无法举证。 简单地说，微信取证不仅要截取聊天记录，还要通过截图、录像等手段向法庭证明截图中的对话双方就是当事人本人。
+微信取证虽然还有其他的注意点，但了解上面四条足以帮助你避开手机操作过程中可能发生的错误。接下来看看微信取证的正确处理方式。
+微信取证的方式 司法实践中，微信聊天记录取证多采取截图 + 录像的方式。截图即对微信聊天记录静态固定，录像即对取证过程动态固定。
+下面以王 XX 诉李 XX 转让合同纠纷案所涉微信记录为例，展示具体取证步骤。即使你不熟悉固定证据的流程，也可以按照下面给出的范例一一截图（图片隐私经打码处理，正常取证步骤无需打码）：
+固定本人信息界面（证明你的微信确实是你的）：证明本人持有微信聊天记录的合法性和本人身份的真实性。
+搜索并固定对方个人信息界面（证明对方的微信确实是他的）：借助微信号不可更改的特点，结合个人信息界面中显示的手机号码、头像等信息固定对方当事人的真实身份。群聊天记录需要截取群信息界面及逐个截取有关人员的个人信息界面。
+固定聊天记录（证明你们的确说过那些话）：据微信聊天记录在使用终端中只能删除不能添加的特点，比对双方各自微信客户端中完整聊天信息，以验证相关信息的完整性和真实性。
+含有音频的，提交与音频内容一致的文字文本。
+含有图片、文本的，提交图片、文本文件打印件，即把对话中的图片、表格等单独打印出来。
+这样微信取证就基本完成了。
+微信取证的更多注意事项 截图并不是微信取证的全部，在截图完毕之后你还需要了解一些法律方面的注意事项，以避免后续鉴定、质证时可能产生的问题。
+可通过公证或加盖时间戳形式强化证据：目前通常采取的证据固定方式主要有公证和电子证据固化加盖时间戳等形式。
+可通过鉴定确认真实性，微信使用人对自己的辩解承担举证责任：只要你对对方出具证据的真实性有所怀疑，都可以申请司法鉴定（通常需要负担一定的鉴定费用）。
+在社交软件范畴内，司法鉴定会检查和判断你的截图内容是否与真实聊天内容相符、是否由对话生成器生成、是否有删改等，还会判断截图期间当事人的账号是否处于被盗或异常状态。
+应保存好原始储存设备并接受当庭质证：当事人应保存好电子证据的原始载体以便在法庭上出示，原始载体包括储存有电子数据的手机、计算机或者其它电子设备等。
+这是非法律专业人士在固定证据时常常忽略的一点。简言之，你不仅要保留截图记录，还好保留这段对话发生时你用于跟对方聊天的那部电子设备（如电脑、手机等）。在案件审理过程中，法庭不一定会要求你出示原始设备，但如果对方提出质疑申请鉴定，原始设备就起到了关键作用。
+应尽量提供其它证据予以佐证：使用支付、转账、红包等功能，应提供支付转账证明；微信聊天记录如果能够与供货单、借条、转账凭证等证据相互印证将更易被采信。
+仅有微信证据而无其他证据佐证的，存在不予采信的风险。
+法律知识拓展 本部分重点告诉你微信取证在法律层面的依据和要求，帮助你更深入地了解包含微信在内的互联网社交工具取证。
+微信聊天记录作为证据的法律依据： 《中华人民共和国民事诉讼法》第六十三条规定电子数据属于法定证据形式。《最高人民法院关于适用〈中华人民共和国民事诉讼法〉的解释》第一百一十六条对电子数据进一步解释：电子数据是指通过电子邮件、电子数据交换、网上聊天记录、博客、微博客、手机短信、电子签名、域名等形成或者存储在电子介质中的信息。 《中华人民共和国电子签名法》第三条至第七条：当事人约定使用电子签名、数据电文的文书，不得仅因为其采用电子签名、数据电文的形式而否定其法律效力；能够有形地表现所载内容，并可以随时调取查用的数据电文，视为符合法律、法规要求的书面形式。 微信聊天记录作为证据的要求： 符合数据电文的原件形式要求：（一）能够有效地表现所载内容并可供随时调取查用；（二）能够可靠地保证自最终形成时起，内容保持完整、未被更改。但是，在数据电文上增加背书以及数据交换、储存和显示过程中发生的形式变化不影响数据电文的完整性。 符合数据电文的文件保存要求：（一）能够有效地表现所载内容并可供随时调取查用；（二）数据电文的格式与其生成、发送或者接收时的格式相同，或者格式不相同但是能够准确表现原来生成、发送或者接收的内容；（三）能够识别数据电文的发件人、收件人以及发送、接收的时间。数据电文不得仅因为其是以电子、光学、磁或者类似手段生成、发送、接收或者储存的而被拒绝作为证据使用。</description></item></channel></rss>

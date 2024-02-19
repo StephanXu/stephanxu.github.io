@@ -1,0 +1,30 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>计算机 - category - Stephan Xu</title><link>http://www.fenzhengrou.wang/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA/</link><description>计算机 - category - Stephan Xu</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Mon, 06 Dec 2021 00:00:00 +0000</lastBuildDate><atom:link href="http://www.fenzhengrou.wang/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA/" rel="self" type="application/rss+xml"/><item><title>红黑树基础操作</title><link>http://www.fenzhengrou.wang/posts/%E7%BA%A2%E9%BB%91%E6%A0%91%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/</link><pubDate>Mon, 06 Dec 2021 00:00:00 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/%E7%BA%A2%E9%BB%91%E6%A0%91%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/</guid><description>性质 每个节点要么是黑色，要么是红色 根节点是黑色 每个叶子结点（NIL）是黑色 每个红色节点的两个子节点一定都是黑色，即不能有两个红色节点相连 任意一节点到每个叶子结点的路径都包含数量相同的黑节点（俗称“黑高”） 推论：如果一个节点存在黑子节点，那么该节点肯定有两个子节点。 自平衡操作 变色：结点的颜色由红变黑或由黑变红。
+左旋：以某个节点作为支点（旋转节点），其右子节点变为旋转节点的父节点，右子节点的左子节点变为旋转节点的右子节点，左子节点保持不变。
+右旋：以某个节点作为支点（旋转节点），其左子节点变为旋转节点的父节点，左子节点的右子节点变为旋转节点的左子节点，右节点保持不变。 插入操作 插入节点时，节点必须为红色。
+原因：红色在父节点为黑色节点时，红黑树的黑色平衡没有被破坏，不需要做自平衡操作。但如果插入节点为黑色，那么插入位置所在的子树黑色节点总是多1，必须做自平衡。
+术语 插入情景 红黑树为空树：直接把插入节点作为根节点，并把插入节点设置为黑色。 插入节点的Key已经存在：更新当前节点的值为插入节点的值。 插入节点的父节点为黑色：由于插入的节点是红色的，当父节点是黑色时，并不会影响红黑树的平衡，直接插入即可，无需做自平衡。 插入节点的父节点为红色：如果插入节点的父节点为红节点，那么该父节点不可能为根节点，所以插入节点总是存在祖父节点。
+叔叔节点存在并且为红节点 将P和U节点改为黑色 将PP改为红色 将PP设置为当前节点，进行后续处理（即如果PP的父节点也是红色，则继续以PP为当前节点进行插入操作自平衡处理，直到平衡为止） 叔叔节点不存在或为黑节点，并且插入节点的父亲节点是祖父节点的左子节点
+新插入的节点是其父节点的左子节点（LL双红）
+变色：将P设置为黑色，将PP设置为红色 对PP节点进行右旋 新插入的节点是其父节点的右子节点（LR双红）
+对P进行左旋 将P设置为当前节点，得到“LL双红”的情况 按照“LL双红”的情况处理（变颜色、右旋PP） 叔叔节点不存在或为黑节点，并且插入节点的父亲节点是祖父节点的右子节点
+新插入的节点是其父节点的右子节点（RR双红）
+变色：将P设置为黑色，将PP设置为红色 对PP节点进行左旋 新插入的节点是其父节点的左子节点（RL双红）
+对P进行右旋 将P设置为当前节点，得到“RR红色”的情况 按照“RR红色”情况处理（变颜色、左旋PP）</description></item><item><title>Bing词典查单词第三方API</title><link>http://www.fenzhengrou.wang/posts/bing%E8%AF%8D%E5%85%B8%E6%9F%A5%E5%8D%95%E8%AF%8D%E7%AC%AC%E4%B8%89%E6%96%B9api/</link><pubDate>Sat, 10 Mar 2018 01:01:48 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/bing%E8%AF%8D%E5%85%B8%E6%9F%A5%E5%8D%95%E8%AF%8D%E7%AC%AC%E4%B8%89%E6%96%B9api/</guid><description><![CDATA[利用简单的请求，获得详细的中英释义及例句
+因为自己建立了一个电子生词本，经常需要在Excel表格中使用到查单词的功能。为了方便，开发了这样的一个简单的API。
+本文即介绍这个API的调用方式以及在Excel中如何具体调用。
+API调用方式（若没有技术背景可直接看后文在Excel中直接使用） 为便于调用，API采用了非常简便的Get方式调用。只需要一个参数word即可。
+如下是一个请求示例：
+https://www.fenzhengrou.wang/engtools/dic?word=hello 返回的数据也非常简单，是一个Json字串：
+{ &#34;headword&#34;: &#34;hello&#34;, &#34;meanings&#34;: { &#34;int.&#34;: &#34;你好；喂；您好；哈喽&#34;, &#34;网络&#34;: &#34;哈罗；哈啰；大家好&#34; }, &#34;pronunce&#34;: [&#34;美[heˈləʊ] &#34;, &#34;英[həˈləʊ] &#34;], &#34;sample&#34;: { &#34;H is for hello , whichis something nice to say , it means I &#39;m glad to see you , any time of a day .&#34;: &#34;H代表你好，一句彬彬有礼的问好，意思是我在一天的任何时候都很高兴见到你。&#34;, &#34;He saidto say hello and he hopes we &#39;ll seeyoufor dinner soon , but he &#39;s got too much work togo out pub crawlingwith the boys .]]></description></item><item><title>初窥比特币，革命性的时代骄傲</title><link>http://www.fenzhengrou.wang/posts/%E5%88%9D%E7%AA%A5%E6%AF%94%E7%89%B9%E5%B8%81%E9%9D%A9%E5%91%BD%E6%80%A7%E7%9A%84%E6%97%B6%E4%BB%A3%E9%AA%84%E5%82%B2/</link><pubDate>Mon, 19 Feb 2018 01:00:45 +0000</pubDate><author/><guid>http://www.fenzhengrou.wang/posts/%E5%88%9D%E7%AA%A5%E6%AF%94%E7%89%B9%E5%B8%81%E9%9D%A9%E5%91%BD%E6%80%A7%E7%9A%84%E6%97%B6%E4%BB%A3%E9%AA%84%E5%82%B2/</guid><description>0. 序： 这是它的创造者中本聪（Satoshi Nakamoto）给出的介绍：
+A purely peer-to-peer version of electronic cash would allow online payments to be sent directly from one party to another without going through a financial institution.
+译：一个完全通过端对端技术实现的电子现金系统，它允许在线支付可以由一方发起并支付给另一方而不需要通过任何的金融机构。
+在2009年1月3日下午六点十五分零五秒，随着比特币的创世区块的诞生，第一批比特币被发掘出来。随后不断加入其中的人们感叹着它设计的精妙。其环环相扣的各种机制，不仅仅是对于支付领域，对于其他领域也具有非常大的启发意义。
+在随后的第7年，也就是2016年，比特币迎来了一次“疯涨”，而2016年也被一些媒体称为“比特币之年”。在随后的2017年，比特币的价格更是一度飙升到20,000美元的高度。正是这样的现象，将比特币这样的新鲜事物带到了公众的面前。并受到了各界的广泛关注。
+因为笔者本身对比特币并不感冒，所以在疯涨的两年里，没有去了解过，更没有对其进行投资，即便是现在众人惊呼“泡沫破碎”，也没有太大的兴趣。但前两天有一位很好的朋友向笔者询问了一些比特币的问题。所以抽了一些时间进行了一些学习和了解。本文既是对自己学习成果的记录和整理，也是希望借此可以让这样一个新奇的思想和技术能够被更多的人所知道。
+在经过了考虑以后，笔者希望就计算机和金融两个领域的意义来分别讲述比特币。
+注：阅读本文，有如下建议：
+如果没有技术背景，文章对部分不易理解的技术细节进行了省略或抽象，不影响在宏观层面理解比特币 但本文仍旧保留了对一些技术（包括算法）的部分引用，供有技术背景的读者进行参考 由于笔者资历尚浅，希望能够尽力帮助读者领会这项技术中的精华所在，但学习终究不够深入（尤其是部分金融专业上的观点，大多由直接总结其他文章得到），若有所纰漏，欢迎批评指正 1. 技术实现 1.1 背景需求： 贸易在人类历史上已经进行了很久很久，然而放眼整个进化史，我们在贸易上发展的时间实在是短的可怜。所以我们暂时还没能演化出对于贸易的本能反应。（事实上，我们的本能难道不是尽可能占有更多的资源拿住不松手吗）所以，我们在交易中常常担心“被骗”。这也说明交易本身需要在双方信任的基础上进行。
+在在线支付这件事情上，前人有过非常多的构想。尤其在于解决双重支付(Double-spending)的问题上我们已经有一套非常常用而且被广泛认可的方式，即借助共同信任的第三方来担任调节工作(Mediating)。例如支付宝、银行等等。因为我们对网线那头的他的约束力是极为有限的，这也就更说明我们需要一个第三方来对我们的交易进行仲裁和管理。不过这样的弊端是显而易见的：
+交易双方都需要提供给第三方若干与交易本身不相干的信息，好比购买一个牙刷，但我需要把我的身份证、学生证、驾驶证甚至是出生证明（打趣）提供给第三方，这显然是对个人隐私的挑战。 交易具有“可逆性”(reversible)，这样的可逆性使得这个第三方拥有绝对的权利掌控交易。也因为各种对买家的保护性措施，使得有的时候发生在买家身上的欺诈性事件也让卖家头疼不已（有的东西是无法退货的，但可逆性使得任何交易都有一定可能被恢复）。 我们没办法保证这样的一个第三方会永久稳健且诚信地提供服务。因为它掌握的权力实在是太大了。或者说，万一某一天支付宝的机房管理员在吃小笼包的时候打翻了饮料把整层楼烧掉。那么所有的交易也就没有根据了。至于钱……人家心眼好选择相信你就会退还，但不退还其实也无可厚非因为并没有数据保留来证明这笔钱是属于谁的（当然这样的情况在现在的世界太难发生）。 然而，尽管有这样的弊端，我们仍不能否认，在体量足够大和稳健的第三方的支持下，这样的机制是非常令人满意的，至少在目前的中国是这样。
+1.2 去中心化 正是在这样的弊端下，有人提出了非常有建设性的意见：
+What is needed is an electronic payment system based on cryptographic proof instead of trust, allowing any two willing parties to transact directly with each other without the need for a trusted third party.</description></item></channel></rss>
